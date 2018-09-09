@@ -31,21 +31,17 @@ goog.require('Blockly.Python');
 
 Blockly.Python['procedures_defreturn'] = function(block) {
   // Define a procedure with a return value.
-  // First, add a 'global' statement for every variable that is assigned.
+  // First, add a 'global' statement for every variable that is not shadowed by
+  // a local parameter.
   // acbart: Actually, skip that, globals are bad news!
-  var globals = []; //Blockly.Variables.allVariables(block);
-  for (var i = globals.length - 1; i >= 0; i--) {
-    var varName = globals[i];
+  /*var globals = []; //Blockly.Variables.allVariables(block);
+  for (var i = 0, varName; varName = block.workspace.variableList[i]; i++) {
     if (block.arguments_.indexOf(varName) == -1) {
-      globals[i] = Blockly.Python.variableDB_.getName(varName,
-          Blockly.Variables.NAME_TYPE);
-    } else {
-      // This variable is actually a parameter name.  Do not include it in
-      // the list of globals, thus allowing it be of local scope.
-      globals.splice(i, 1);
+      globals.push(Blockly.Python.variableDB_.getName(varName,
+          Blockly.Variables.NAME_TYPE));
     }
   }
-  globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';
+  globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';*/
   // Get the function's name
   var funcName = Blockly.Python.variableDB_.getName(block.getFieldValue('NAME'),
       Blockly.Procedures.NAME_TYPE);
@@ -76,7 +72,7 @@ Blockly.Python['procedures_defreturn'] = function(block) {
         Blockly.Variables.NAME_TYPE);
   }
   var code = 'def ' + funcName + '(' + args.join(', ') + '):\n' +
-      globals + branch + returnValue;
+      /*globals + */branch + returnValue;
   //acbart: I'm not sure why this is used here. It was fine before when
   //        functions didn't have anything after them, but now it's deadly.
   //code = Blockly.Python.scrub_(block, code);
@@ -99,7 +95,11 @@ Blockly.Python['procedures_callreturn'] = function(block) {
         Blockly.Python.ORDER_NONE) || '___';
   }
   var code = funcName + '(' + args.join(', ') + ')';
-  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+  if (block.outputConnection) {
+    return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+  } else {
+    return code;
+  }
 };
 
 Blockly.Python['procedures_callnoreturn'] = function(block) {
@@ -112,7 +112,11 @@ Blockly.Python['procedures_callnoreturn'] = function(block) {
         Blockly.Python.ORDER_NONE) || '___';
   }
   var code = funcName + '(' + args.join(', ') + ')\n';
-  return code;
+  if (block.outputConnection) {
+    return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+  } else {
+    return code;
+  }
 };
 
 Blockly.Python['procedures_ifreturn'] = function(block) {

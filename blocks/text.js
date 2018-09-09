@@ -43,7 +43,7 @@ Blockly.Blocks['text'] = {
    */
   init: function() {
     this.setHelpUrl(Blockly.Msg.TEXT_TEXT_HELPURL);
-    this.setColour(Blockly.Blocks.texts.HUE);
+    this.setColour(DATA_HUE);
     this.appendDummyInput()
         .appendField(this.newQuote_(true))
         .appendField(new Blockly.FieldTextInput(''), 'TEXT')
@@ -324,9 +324,12 @@ Blockly.Blocks['text_indexOf'] = {
       this.appendDummyInput().appendField(Blockly.Msg.TEXT_INDEXOF_TAIL);
     }
     this.setInputsInline(true);
-    var tooltip = Blockly.Msg.TEXT_INDEXOF_TOOLTIP
-        .replace('%1', Blockly.Blocks.ONE_BASED_INDEXING ? '0' : '-1');
-    this.setTooltip(tooltip);
+    // Assign 'this' to a variable for use in the tooltip closure below.
+    var thisBlock = this;
+    this.setTooltip(function() {
+      return Blockly.Msg.TEXT_INDEXOF_TOOLTIP.replace('%1',
+          thisBlock.workspace.options.oneBasedIndex ? '0' : '-1');
+    });
   }
 };
 
@@ -357,8 +360,11 @@ Blockly.Blocks['text_charAt'] = {
       var where = thisBlock.getFieldValue('WHERE');
       var tooltip = Blockly.Msg.TEXT_CHARAT_TOOLTIP;
       if (where == 'FROM_START' || where == 'FROM_END') {
-        tooltip += '  ' + Blockly.Msg.LISTS_INDEX_FROM_END_TOOLTIP
-            .replace('%1', Blockly.Blocks.ONE_BASED_INDEXING ? '#1' : '#0');
+        var msg = (where == 'FROM_START') ?
+            Blockly.Msg.LISTS_INDEX_FROM_START_TOOLTIP :
+            Blockly.Msg.LISTS_INDEX_FROM_END_TOOLTIP;
+        tooltip += '  ' + msg.replace('%1',
+            thisBlock.workspace.options.oneBasedIndex ? '#1' : '#0');
       }
       return tooltip;
     });

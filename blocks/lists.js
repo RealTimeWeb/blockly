@@ -31,7 +31,7 @@ goog.require('Blockly.Blocks');
 /**
  * Common HSV hue for all blocks in this category.
  */
-Blockly.Blocks.lists.HUE = 100;
+Blockly.Blocks.lists.HUE = 30;
 
 Blockly.Blocks['lists_create_empty'] = {
   /**
@@ -76,6 +76,9 @@ Blockly.Blocks['lists_create_with'] = {
   mutationToDom: function() {
     var container = document.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
+    /*if (this.itemCount_ > 3) {
+        container.setAttribute("inline", "false");
+    } */
     return container;
   },
   /**
@@ -169,6 +172,11 @@ Blockly.Blocks['lists_create_with'] = {
           input.appendField(Blockly.Msg.LISTS_CREATE_WITH_INPUT_WITH);
         }
       }
+    }
+    if (this.itemCount_ > 3) {
+        this.setInputsInline(false);
+    } else {
+        this.setInputsInline(true);
     }
     // Remove deleted inputs.
     while (this.getInput('ADD' + i)) {
@@ -295,14 +303,17 @@ Blockly.Blocks['lists_indexOf'] = {
     this.setColour(Blockly.Blocks.lists.HUE);
     this.setOutput(true, 'Number');
     this.appendValueInput('VALUE')
-        .setCheck('Array')
+        .setCheck(['Array', 'String'])
         .appendField(Blockly.Msg.LISTS_INDEX_OF_INPUT_IN_LIST);
     this.appendValueInput('FIND')
         .appendField(new Blockly.FieldDropdown(OPERATORS), 'END');
     this.setInputsInline(true);
-    var tooltip = Blockly.Msg.LISTS_INDEX_OF_TOOLTIP
-        .replace('%1', Blockly.Blocks.ONE_BASED_INDEXING ? '0' : '-1');
-    this.setTooltip(tooltip);
+    // Assign 'this' to a variable for use in the tooltip closure below.
+    var thisBlock = this;
+    this.setTooltip(function() {
+      return Blockly.Msg.LISTS_INDEX_OF_TOOLTIP.replace('%1',
+          this.workspace.options.oneBasedIndex ? '0' : '-1');
+    });
   }
 };
 
@@ -318,7 +329,7 @@ Blockly.Blocks['lists_index'] = {
             .setCheck('Number')
             .appendField("get");
         this.appendValueInput('LIST')
-            .setCheck('Array')
+            .setCheck(['Array', 'String'])
             .appendField("th item of");
         this.setInputsInline(true);
         this.setOutput(true);
@@ -343,7 +354,8 @@ Blockly.Blocks['lists_getIndex'] = {
          [Blockly.Msg.LISTS_GET_INDEX_FROM_END, 'FROM_END'],
          [Blockly.Msg.LISTS_GET_INDEX_FIRST, 'FIRST'],
          [Blockly.Msg.LISTS_GET_INDEX_LAST, 'LAST'],
-         [Blockly.Msg.LISTS_GET_INDEX_RANDOM, 'RANDOM']];
+         [Blockly.Msg.LISTS_GET_INDEX_RANDOM, 'RANDOM']
+         ];
     this.setHelpUrl(Blockly.Msg.LISTS_GET_INDEX_HELPURL);
     this.setColour(Blockly.Blocks.lists.HUE);
     var modeMenu = new Blockly.FieldDropdown(MODE, function(value) {
@@ -412,8 +424,11 @@ Blockly.Blocks['lists_getIndex'] = {
           break;
       }
       if (where == 'FROM_START' || where == 'FROM_END') {
-        tooltip += '  ' + Blockly.Msg.LISTS_INDEX_FROM_START_TOOLTIP
-            .replace('%1', Blockly.Blocks.ONE_BASED_INDEXING ? '#1' : '#0');
+        var msg = (where == 'FROM_START') ?
+            Blockly.Msg.LISTS_INDEX_FROM_START_TOOLTIP :
+            Blockly.Msg.LISTS_INDEX_FROM_END_TOOLTIP;
+        tooltip += '  ' + msg.replace('%1',
+                thisBlock.workspace.options.oneBasedIndex ? '#1' : '#0');
       }
       return tooltip;
     });
@@ -573,7 +588,8 @@ Blockly.Blocks['lists_setIndex'] = {
       }
       if (where == 'FROM_START' || where == 'FROM_END') {
         tooltip += '  ' + Blockly.Msg.LISTS_INDEX_FROM_START_TOOLTIP
-            .replace('%1', Blockly.Blocks.ONE_BASED_INDEXING ? '#1' : '#0');
+            .replace('%1',
+                thisBlock.workspace.options.oneBasedIndex ? '#1' : '#0');
       }
       return tooltip;
     });
@@ -658,7 +674,7 @@ Blockly.Blocks['lists_getSublist'] = {
     this.setHelpUrl(Blockly.Msg.LISTS_GET_SUBLIST_HELPURL);
     this.setColour(Blockly.Blocks.lists.HUE);
     this.appendValueInput('LIST')
-        .setCheck('Array')
+        .setCheck(['Array', "String"])
         .appendField(Blockly.Msg.LISTS_GET_SUBLIST_INPUT_IN_LIST);
     this.appendDummyInput('AT1');
     this.appendDummyInput('AT2');
